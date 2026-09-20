@@ -26,6 +26,8 @@
             @delete="$emit('deleteItem',it.uid)"
             @updateText="$emit('updateTextBoxText',$event)"
             @resizeTextbox="$emit('resizeTextbox', $event)"
+            @dblClickText="handleDblClickTextItem(it.uid)"
+            @blurTextbox="handleBlurEditItem(it.uid)"
           />
           <CanvasItemSticker
             v-if="it.type==='sticker'"

@@ -4,8 +4,10 @@
     <div
       ref="textRef"
       class="text-content"
-      contenteditable
+      :contenteditable="!!item.editing"
       @input="handleInput"
+      @blur="handleBlur"
+      @dblclick.stop="$emit('dblClickText')"
     >{{item.innerText}}</div>
     <div
       v-if="editMode"
@@ -16,12 +18,21 @@
   </div>
 </template>
 <script setup>
-import {ref,onMounted,onUnmounted} from "vue";
+import {ref,onMounted,onUnmounted,watch} from "vue";
 const props = defineProps({
   item: Object,
   editMode: Boolean
 })
-const emit = defineEmits(["delete","updateText","resizeTextbox"])
+const emit = defineEmits(["delete","updateText","resizeTextbox","dblClickText","blurTextbox"])
+
+const textRef = ref(null)
+
+// 进入编辑模式自动聚焦
+watch(()=>props.item.editing, (val)=>{
+  if(val){
+    textRef.value?.focus()
+  }
+})
 
 let isResizing = false;
 let startW = 0;
@@ -37,6 +48,7 @@ function onMouseMove(e){
   const newH = Math.max(40, startH + dh);
   emit("resizeTextbox",props.item.uid, newW, newH);
 }
+
 function onMouseUp(){
   isResizing = false;
   document.removeEventListener("mousemove",onMouseMove);
@@ -44,6 +56,7 @@ function onMouseUp(){
   document.removeEventListener("touchmove",onTouchMove);
   document.removeEventListener("touchend",onTouchEnd);
 }
+
 function onTouchMove(e){
   if(!isResizing) return;
   e.preventDefault();
@@ -54,6 +67,7 @@ function onTouchMove(e){
   const newH = Math.max(40, startH + dh);
   emit("resizeTextbox",props.item.uid, newW, newH);
 }
+
 function onTouchEnd(){
   isResizing = false;
 }
@@ -69,6 +83,7 @@ function startMouseResize(evt){
   document.addEventListener("mousemove",onMouseMove);
   document.addEventListener("mouseup",onMouseUp);
 }
+
 function startTouchResize(evt){
   evt.stopPropagation();
   evt.preventDefault();
@@ -84,6 +99,10 @@ function startTouchResize(evt){
 
 function handleInput(e){
   emit("updateText", props.item.uid, e.target.innerText)
+}
+
+function handleBlur(){
+  emit("blurTextbox", props.item.uid)
 }
 
 onUnmounted(()=>{
@@ -125,6 +144,5 @@ onUnmounted(()=>{
   width:20px;height:20px;
   background:#888;
   cursor:nwse-resize;
-  /*增大触摸热区适合手机手指操作*/
 }
 </style>
