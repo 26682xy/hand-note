@@ -1,0 +1,17 @@
+@updateText="(...args) => { $emit('updateTextBoxText', ...args) }"
+@updateText="$emit('updateTextBoxText',...$event)"
+这两行效果是不同的，第二行这种写法不管用。
+
+
+# 回调函数 vs 调用函数
+
+Vue 的 `@事件="xxx"` 引号里面，可以写两大类东西：
+
+1. **写函数名（传入回调函数）：`@foo="handleChange"`**
+>这种模式下，$event可以拿到所有参数
+
+2. **写函数调用（立刻执行）：`@foo="handleChange(a,b)"`**
+>这种模式下，$event等于第一个参数，不是数组，在多个参数的情况下会有bug,...$event后会展开第一个参数为数组
+
+>$emit('updateTextBoxText',...$event)属于立即执行的写法
+>箭头函数引号里是创建一个匿名箭头函数，传给 Vue 当做回调，属于第一种模式
