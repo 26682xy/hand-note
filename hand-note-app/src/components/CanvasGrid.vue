@@ -22,9 +22,10 @@
           <CanvasItemTextbox
             v-if="it.type==='textbox'"
             :item="it"
-            :editMode="editMode"
             @delete="$emit('deleteItem',it.uid)"
-            @updateText="$emit('updateTextBoxText',$event)"
+            @updateText="$emit('updateTextBoxText', $event)"
+            @dblclick-item="handleDblClickTextItem"
+            @blur-edit="handleBlurEditItem"
           />
           <CanvasItemSticker
             v-if="it.type==='sticker'"
@@ -46,7 +47,6 @@ import {ref} from "vue";
 import CanvasItemCheckin from "./CanvasItemCheckin.vue";
 import CanvasItemTextbox from "./CanvasItemTextbox.vue";
 import CanvasItemSticker from "./CanvasItemSticker.vue";
-
 const props = defineProps({
   itemList:{type:Array,default:()=>[]},
   canvasHeight:{type:Number,default:600},
@@ -59,7 +59,6 @@ const emit = defineEmits([
 const wrapRef = ref(null);
 const canvasRef = ref(null);
 const GRID = 32;
-
 let dragItem = null;
 let offsetX=0,offsetY=0;
 
@@ -68,9 +67,35 @@ function getCanvasOffset(){
   return rect;
 }
 
+// 双击文字框开启编辑
+function handleDblClickTextItem(uid){
+  // 关闭全部文本编辑状态
+  props.itemList.forEach(it=>{
+    if(it.type === "textbox"){
+      it.editing = false
+    }
+  })
+  const target = props.itemList.find(i=>i.uid === uid)
+  if(target){
+    target.editing = true
+  }
+}
+
+// 文字框失去焦点关闭编辑
+function handleBlurEditItem(uid){
+  const target = props.itemList.find(i=>i.uid === uid)
+  if(target){
+    target.editing = false
+  }
+}
+
 //鼠标拖拽
 function startDrag(evt,item){
   if(!props.editMode) return;
+  // 如果文字框正在编辑，禁止拖拽
+  if(item.type === "textbox" && item.editing){
+    return
+  }
   evt.preventDefault();
   dragItem = item;
   const rect = evt.target.getBoundingClientRect();
@@ -93,6 +118,10 @@ function onMouseMove(e){
 //移动端触摸拖拽
 function startTouchDrag(evt,item){
   if(!props.editMode) return;
+  // 如果文字框正在编辑，禁止拖拽
+  if(item.type === "textbox" && item.editing){
+    return
+  }
   evt.preventDefault();
   dragItem = item;
   const touch = evt.touches[0];

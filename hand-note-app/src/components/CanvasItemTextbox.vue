@@ -1,24 +1,42 @@
 <template>
   <div class="textbox-item" :style="{width:item.w+'px',height:item.h+'px'}">
-    <div class="item-del" v-if="editMode" @click.stop="$emit('delete')">×</div>
+    <div class="item-del" v-if="item.editing" @click.stop="$emit('delete')">×</div>
     <div
       ref="textRef"
       class="text-content"
-      :contenteditable="editMode"
+      :contenteditable="item.editing"
       @input="handleInput"
+      @blur="handleBlur"
+      @dblclick.stop="$emit('dblclick-item', item.uid)"
     >{{item.innerText}}</div>
-    <div v-if="editMode" class="resize-handle"></div>
+    <div v-if="item.editing" class="resize-handle"></div>
   </div>
 </template>
 <script setup>
+import { ref, watch, nextTick } from 'vue'
+const textRef = ref(null)
+
 const props = defineProps({
   item: Object,
-  editMode: Boolean
 })
-const emit = defineEmits(["delete","updateText"])
+const emit = defineEmits(["delete","updateText","dblclick-item","blur-edit"])
+
 function handleInput(e){
   emit("updateText", props.item.uid, e.target.innerText)
 }
+
+function handleBlur(){
+  emit("blur-edit", props.item.uid)
+}
+
+// 开启编辑时自动聚焦光标
+watch(()=>props.item.editing, (val)=>{
+  if(val){
+    nextTick(()=>{
+      textRef.value?.focus()
+    })
+  }
+})
 </script>
 <style scoped>
 .textbox-item{
