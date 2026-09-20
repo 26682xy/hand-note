@@ -8,8 +8,6 @@
       @add="canvasStore.newTempCanvas"
       @closeTab="canvasStore.removeTempCanvas"
     ></TempCanvasSwitch>
-
-
     <div class="canvas-area">
       <CanvasGrid
         v-if="currentData"

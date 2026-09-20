@@ -25,6 +25,16 @@ export const useHomeTempCanvasStore = defineStore("homeTempCanvas",{
     saveLocalStorage(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.tmpCanvasList));
     },
+    removeTempCanvas(removeId){
+      const idx = this.tmpCanvasList.findIndex(x=>x.id===removeId);
+      if(idx===-1) return;
+      this.tmpCanvasList.splice(idx,1);
+      // 如果删除的是当前激活tab，自动切到第0个
+      if(this.curTmpCanvasId === removeId){
+        this.curTmpCanvasId = this.tmpCanvasList[0].id;
+      }
+      this.saveLocalStorage();
+    },
     initIfEmpty(){
       this.loadLocalStorage();
       if(this.tmpCanvasList.length===0){
