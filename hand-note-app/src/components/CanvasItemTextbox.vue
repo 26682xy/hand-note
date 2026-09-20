@@ -1,6 +1,6 @@
 <template>
   <div class="textbox-item" :style="{width:item.w+'px',height:item.h+'px'}">
-    <div class="item-del" v-if="item.editing" @click.stop="$emit('delete')">×</div>
+    <div class="item-del" @click.stop="$emit('delete')">×</div>
     <div
       ref="textRef"
       class="text-content"
@@ -9,7 +9,7 @@
       @blur="handleBlur"
       @dblclick.stop="$emit('dblclick-item', item.uid)"
     >{{item.innerText}}</div>
-    <div v-if="item.editing" class="resize-handle"></div>
+    <div class="resize-handle"></div>
   </div>
 </template>
 <script setup>
