@@ -27,6 +27,7 @@
             @updateText="$emit('updateTextBoxText',$event)"
             @resizeTextbox="$emit('resizeTextbox', $event)"
             @dblClickText="handleDblClickTextItem(it.uid)"
+            @longPressText="handleDblClickTextItem(it.uid)"
             @blurTextbox="handleBlurEditItem(it.uid)"
           />
           <CanvasItemSticker

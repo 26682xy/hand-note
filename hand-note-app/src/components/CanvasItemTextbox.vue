@@ -8,6 +8,10 @@
       @input="handleInput"
       @blur="handleBlur"
       @dblclick.stop="$emit('dblClickText')"
+      @touchstart.stop="onTextTouchStart"
+      @touchmove.stop="onTextTouchMove"
+      @touchend.stop="onTextTouchEnd"
+      @touchcancel.stop="onTextTouchEnd"
     >{{item.innerText}}</div>
     <div
       v-if="editMode"
@@ -18,21 +22,62 @@
   </div>
 </template>
 <script setup>
-import {ref,onMounted,onUnmounted,watch} from "vue";
+import {ref,onUnmounted,watch} from "vue";
 const props = defineProps({
   item: Object,
   editMode: Boolean
 })
-const emit = defineEmits(["delete","updateText","resizeTextbox","dblClickText","blurTextbox"])
+const emit = defineEmits(["delete","updateText","resizeTextbox","dblClickText","longPressText","blurTextbox"])
 
 const textRef = ref(null)
 
-// 进入编辑模式自动聚焦
+// PC双击；移动端长按触发编辑
+let longPressTimer = null;
+let touchStartX = 0;
+let touchStartY = 0;
+const LONG_PRESS_DELAY = 600; // 长按600ms触发编辑
+const MOVE_THRESHOLD = 10; //移动超过10px判定拖拽，取消长按
+
+// 编辑状态自动聚焦
 watch(()=>props.item.editing, (val)=>{
   if(val){
     textRef.value?.focus()
   }
 })
+
+function clearLongPressTimer(){
+  if(longPressTimer){
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+}
+
+function onTextTouchStart(e){
+  clearLongPressTimer();
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  // 只有非编辑状态才开启长按计时器
+  if(!props.item.editing){
+    longPressTimer = setTimeout(()=>{
+      emit("longPressText");
+    }, LONG_PRESS_DELAY);
+  }
+}
+
+function onTextTouchMove(e){
+  const t = e.touches[0];
+  const dx = Math.abs(t.clientX - touchStartX);
+  const dy = Math.abs(t.clientY - touchStartY);
+  //手指移动超过阈值，取消长按，交给父组件拖拽
+  if(dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD){
+    clearLongPressTimer();
+  }
+}
+
+function onTextTouchEnd(){
+  clearLongPressTimer();
+}
 
 let isResizing = false;
 let startW = 0;
@@ -106,6 +151,7 @@ function handleBlur(){
 }
 
 onUnmounted(()=>{
+  clearLongPressTimer();
   onMouseUp();
 })
 </script>
@@ -136,6 +182,15 @@ onUnmounted(()=>{
   width:100%;
   height:100%;
   outline:none;
+  /*禁止系统长按弹出复制菜单*/
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/*编辑模式允许选中文本*/
+.text-content[contenteditable="true"]{
+  -webkit-user-select:text;
+  user-select:text;
 }
 .resize-handle{
   position:absolute;

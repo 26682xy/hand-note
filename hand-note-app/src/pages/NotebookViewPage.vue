@@ -193,7 +193,7 @@ async function confirmPageDelete(){
   function addTextBox(){
     const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
     store.items.push({
-      uid,type:"textbox",x:64,y:128,w:140,h:90,innerText:"在这里输入文字"
+      uid,type:"textbox",x:64,y:128,w:140,h:90,innerText:"在这里输入文字",editing: false
     })
   }
   async function submitUpload(){
