@@ -25,7 +25,7 @@
             :editMode="editMode"
             @delete="$emit('deleteItem',it.uid)"
             @updateText="(...args) => { $emit('updateTextBoxText', ...args) }"
-            @resizeTextbox="(...args) => { console.log('resizeTextbox 收到参数', args);$emit('resizeTextbox', args) }"
+            @resizeTextbox="(...args) => { console.log('resizeTextbox 收到参数', args);$emit('resizeTextbox', ...args) }"
             @dblClickText="handleDblClickTextItem(it.uid)"
             @longPressText="handleDblClickTextItem(it.uid)"
             @blurTextbox="handleBlurEditItem(it.uid)"

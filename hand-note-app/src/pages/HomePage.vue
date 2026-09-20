@@ -134,7 +134,7 @@ function onItemMove(item){
   canvasStore.persistSave();
 }
 
-function handleResizeTextBox([uid,newW,newH]){
+function handleResizeTextBox(uid,newW,newH){
   const it = currentData.value.items.find(x=>x.uid===uid);
   if(it){
     it.w = newW;
