@@ -4,7 +4,7 @@
     <div
       ref="textRef"
       class="text-content"
-      contenteditable
+      :contenteditable="editMode"
       @input="handleInput"
     >{{item.innerText}}</div>
     <div v-if="editMode" class="resize-handle"></div>
