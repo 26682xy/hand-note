@@ -22,10 +22,10 @@
           <CanvasItemTextbox
             v-if="it.type==='textbox'"
             :item="it"
+            :editMode="editMode"
             @delete="$emit('deleteItem',it.uid)"
-            @updateText="$emit('updateTextBoxText', $event)"
-            @dblclick-item="handleDblClickTextItem"
-            @blur-edit="handleBlurEditItem"
+            @updateText="$emit('updateTextBoxText',$event)"
+            @resizeTextbox="$emit('resizeTextbox', $event)"
           />
           <CanvasItemSticker
             v-if="it.type==='sticker'"
@@ -54,8 +54,9 @@ const props = defineProps({
 })
 const emit = defineEmits([
   "deleteItem","clickCheckin","updateTextBoxText",
-  "addCanvasHeight","subCanvasHeight","itemMove"
+  "addCanvasHeight","subCanvasHeight","itemMove","resizeTextbox"
 ])
+
 const wrapRef = ref(null);
 const canvasRef = ref(null);
 const GRID = 32;

@@ -1,41 +1,93 @@
 <template>
   <div class="textbox-item" :style="{width:item.w+'px',height:item.h+'px'}">
-    <div class="item-del" @click.stop="$emit('delete')">×</div>
+    <div class="item-del" v-if="editMode" @click.stop="$emit('delete')">×</div>
     <div
       ref="textRef"
       class="text-content"
-      :contenteditable="item.editing"
+      contenteditable
       @input="handleInput"
-      @blur="handleBlur"
-      @dblclick.stop="$emit('dblclick-item', item.uid)"
     >{{item.innerText}}</div>
-    <div class="resize-handle"></div>
+    <div
+      v-if="editMode"
+      class="resize-handle"
+      @mousedown="startMouseResize($event)"
+      @touchstart="startTouchResize($event)"
+    ></div>
   </div>
 </template>
 <script setup>
-import { ref, watch, nextTick } from 'vue'
-const textRef = ref(null)
-
+import {ref,onMounted,onUnmounted} from "vue";
 const props = defineProps({
   item: Object,
+  editMode: Boolean
 })
-const emit = defineEmits(["delete","updateText","dblclick-item","blur-edit"])
+const emit = defineEmits(["delete","updateText","resizeTextbox"])
+
+let isResizing = false;
+let startW = 0;
+let startH = 0;
+let startClientX = 0;
+let startClientY = 0;
+
+function onMouseMove(e){
+  if(!isResizing) return;
+  const dw = e.clientX - startClientX;
+  const dh = e.clientY - startClientY;
+  const newW = Math.max(80, startW + dw);
+  const newH = Math.max(40, startH + dh);
+  emit("resizeTextbox",props.item.uid, newW, newH);
+}
+function onMouseUp(){
+  isResizing = false;
+  document.removeEventListener("mousemove",onMouseMove);
+  document.removeEventListener("mouseup",onMouseUp);
+  document.removeEventListener("touchmove",onTouchMove);
+  document.removeEventListener("touchend",onTouchEnd);
+}
+function onTouchMove(e){
+  if(!isResizing) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  const dw = touch.clientX - startClientX;
+  const dh = touch.clientY - startClientY;
+  const newW = Math.max(80, startW + dw);
+  const newH = Math.max(40, startH + dh);
+  emit("resizeTextbox",props.item.uid, newW, newH);
+}
+function onTouchEnd(){
+  isResizing = false;
+}
+
+function startMouseResize(evt){
+  evt.stopPropagation();
+  evt.preventDefault();
+  isResizing=true;
+  startW = props.item.w;
+  startH = props.item.h;
+  startClientX = evt.clientX;
+  startClientY = evt.clientY;
+  document.addEventListener("mousemove",onMouseMove);
+  document.addEventListener("mouseup",onMouseUp);
+}
+function startTouchResize(evt){
+  evt.stopPropagation();
+  evt.preventDefault();
+  isResizing=true;
+  const t = evt.touches[0];
+  startW = props.item.w;
+  startH = props.item.h;
+  startClientX = t.clientX;
+  startClientY = t.clientY;
+  document.addEventListener("touchmove",onTouchMove,{passive:false});
+  document.addEventListener("touchend",onTouchEnd);
+}
 
 function handleInput(e){
   emit("updateText", props.item.uid, e.target.innerText)
 }
 
-function handleBlur(){
-  emit("blur-edit", props.item.uid)
-}
-
-// 开启编辑时自动聚焦光标
-watch(()=>props.item.editing, (val)=>{
-  if(val){
-    nextTick(()=>{
-      textRef.value?.focus()
-    })
-  }
+onUnmounted(()=>{
+  onMouseUp();
 })
 </script>
 <style scoped>
@@ -70,8 +122,9 @@ watch(()=>props.item.editing, (val)=>{
   position:absolute;
   right:0;
   bottom:0;
-  width:14px;height:14px;
+  width:20px;height:20px;
   background:#888;
   cursor:nwse-resize;
+  /*增大触摸热区适合手机手指操作*/
 }
 </style>

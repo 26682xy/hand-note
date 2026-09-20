@@ -13,18 +13,17 @@
   
       <div class="canvas-area">
         <CanvasGrid
-  :itemList="store.items"
-  :canvasHeight="store.canvasHeight"
-  :editMode="store.isEditMode"
-  @deleteItem="onDeleteItem"
-  @clickCheckin="clickCheckinHandler"
-  @updateTextBoxText="updateTextBox"
-  @addCanvasHeight="addHeight"
-  @subCanvasHeight="subHeight"
-  @itemMove="onItemMove"
-  @resizeTextbox="handleResizeTextBox"
-/>
-
+          :itemList="store.items"
+          :canvasHeight="store.canvasHeight"
+          :editMode="store.isEditMode"
+          @deleteItem="onDeleteItem"
+          @clickCheckin="clickCheckinHandler"
+          @updateTextBoxText="updateTextBox"
+          @addCanvasHeight="addHeight"
+          @subCanvasHeight="subHeight"
+          @itemMove="onItemMove"
+          @resizeTextbox="handleResizeTextBox"
+        />
       </div>
   
       <BottomEditToolbar

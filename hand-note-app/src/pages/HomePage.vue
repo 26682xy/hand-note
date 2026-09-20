@@ -6,7 +6,9 @@
       :activeId="canvasStore.curTmpCanvasId"
       @switch="switchCanvas"
       @add="canvasStore.newTempCanvas"
+      @closeTab="canvasStore.removeTempCanvas"
     ></TempCanvasSwitch>
+
 
     <div class="canvas-area">
       <CanvasGrid
@@ -16,10 +18,11 @@
         :editMode="editMode"
         @deleteItem="onDeleteItem"
         @clickCheckin="clickCheckinHandler"
-        @updateTextBoxText="updateText"
+        @updateTextBoxText="updateTextBox"
         @addCanvasHeight="addHeight"
         @subCanvasHeight="subHeight"
         @itemMove="onItemMove"
+        @resizeTextbox="handleResizeTextBox"
       />
     </div>
 
@@ -120,12 +123,27 @@ function switchCanvas(id){
 function enterEdit(){editMode.value=true;}
 function exitEdit(){editMode.value=false;}
 
+
+
+
 function onDeleteItem(uid){
   const arr = currentData.value.items;
   const idx = arr.findIndex(i=>i.uid===uid);
   if(idx>-1) arr.splice(idx,1);
+  canvasStore.persistSave();
 }
-function onItemMove(item){}
+function onItemMove(item){
+  canvasStore.persistSave();
+}
+
+function handleResizeTextBox([uid,newW,newH]){
+  const it = currentData.value.items.find(x=>x.uid===uid);
+  if(it){
+    it.w = newW;
+    it.h = newH;
+    canvasStore.persistSave();
+  }
+}
 
 function clickCheckinHandler(uid){
   if(editMode.value) return;
@@ -136,27 +154,34 @@ function clickCheckinHandler(uid){
     showUncheckModal.value=true;
   }else{
     it.done=true;
+    canvasStore.persistSave();
   }
 }
 function confirmUncheck(){
   const it = currentData.value.items.find(x=>x.uid===uncheckTargetUid.value);
   if(it) it.done=false;
   showUncheckModal.value=false;
+  canvasStore.persistSave();
 }
 
 function updateTextBox(uid,text){
   const it = currentData.value.items.find(x=>x.uid===uid);
-  if(it) it.innerText = text;
+  if(it) {
+    it.innerText = text;
+    canvasStore.persistSave();
+  }
 }
 
 function addHeight(){
   const addH = Math.round(window.innerHeight /3);
   currentData.value.height += addH;
+  canvasStore.persistSave();
 }
 function subHeight(){
   const minH = window.innerHeight;
   const subH = Math.round(window.innerHeight /3);
   currentData.value.height = Math.max(minH, currentData.value.height - subH);
+  canvasStore.persistSave();
 }
 
 function resetAllStatus(){
@@ -164,12 +189,9 @@ function resetAllStatus(){
     if(it.type==="checkin") it.done=false;
     if(it.type==="textbox") it.innerText="";
   })
+  canvasStore.persistSave();
 }
 
-function openCheckinModal(){
-  newCheck.value.name="";
-  showCheckinModal.value=true;
-}
 function confirmAddCheckin(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
@@ -181,12 +203,14 @@ function confirmAddCheckin(){
     done:false
   })
   showCheckinModal.value=false;
+  canvasStore.persistSave();
 }
 function addTextBox(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
     uid,type:"textbox",x:64,y:128,w:140,h:90,innerText:"在这里输入文字"
   })
+  canvasStore.persistSave();
 }
 async function submitUpload(){
   const fd = new FormData();
@@ -197,7 +221,19 @@ async function submitUpload(){
     uid,type:"sticker",x:128,y:64,imgUrl:res.data.data.url
   })
   showUploadModal.value=false;
+  canvasStore.persistSave();
 }
+
+
+
+
+function openCheckinModal(){
+  newCheck.value.name="";
+  showCheckinModal.value=true;
+}
+
+
+
 function openSaveModal(){
   saveTitle.value="";
   showSaveModal.value=true;
