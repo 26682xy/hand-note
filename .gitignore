@@ -1,0 +1,20 @@
+# node依赖
+node_modules/
+# vite打包产物
+dist/
+# 环境变量
+.env
+.env.local
+# 编辑器缓存
+.idea/
+.vscode/
+*.swp
+*.swo
+# 系统文件
+.DS_Store
+Thumbs.db
+# 日志
+npm-debug.log*
+yarn-debug.log*
+# 数据库本地文件（如果你mysql本地文件）
+*.sqlbak
