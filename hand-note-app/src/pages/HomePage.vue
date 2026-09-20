@@ -26,7 +26,7 @@
     <div class="top-action">
       <button class="reset-btn" @click="resetAllStatus">更新重置</button>
       <button v-if="!editMode" class="enter-edit" @click="enterEdit">+进入编辑</button>
-      <button v-if="editMode" class="save-btn" @click="openSaveModal">保存</button>
+      <button v-if="!editMode" class="save-btn" @click="openSaveModal">保存</button>
     </div>
 
     <!--底部工具栏-->
