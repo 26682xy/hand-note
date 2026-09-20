@@ -71,3 +71,9 @@ hand-note-server
 5、改造工具栏；
 6、设计ui;
 
+踩坑实录：
+1、
+@updateText="(...args) => { $emit('updateTextBoxText', ...args) }"
+@updateText="$emit('updateTextBoxText',...$event)"
+这两行效果是不同的，第二行这种写法不管用。
+

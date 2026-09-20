@@ -24,7 +24,7 @@
             :item="it"
             :editMode="editMode"
             @delete="$emit('deleteItem',it.uid)"
-            @updateText="$emit('updateTextBoxText',$event)"
+            @updateText="(...args) => { $emit('updateTextBoxText', ...args) }"
             @resizeTextbox="$emit('resizeTextbox', $event)"
             @dblClickText="handleDblClickTextItem(it.uid)"
             @longPressText="handleDblClickTextItem(it.uid)"
@@ -88,6 +88,7 @@ function handleDblClickTextItem(uid){
 // 文字框失去焦点关闭编辑
 function handleBlurEditItem(uid){
   const target = props.itemList.find(i=>i.uid === uid)
+  console.log('[handleBlurEditItem] 关闭编辑，uid=', uid, 'target.innerText=', target?.innerText)
   if(target){
     target.editing = false
   }

@@ -163,9 +163,12 @@ function confirmUncheck(){
 }
 
 function updateTextBox(uid,text){
+  console.log('[HomePage updateTextBox] uid',uid,'text:', text)
   const it = currentData.value.items.find(x=>x.uid===uid);
   if(it) {
+    console.log('修改前it.innerText=', it.innerText)
     it.innerText = text;
+    console.log('修改后it.innerText=', it.innerText)
     canvasStore.persistSave();
   }
 }

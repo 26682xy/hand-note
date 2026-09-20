@@ -143,10 +143,12 @@ function startTouchResize(evt){
 }
 
 function handleInput(e){
+  console.log('[handleInput] 输入触发，新文本：', e.target.innerText, '当前item.uid:', props.item.uid)
   emit("updateText", props.item.uid, e.target.innerText)
 }
 
 function handleBlur(){
+  console.log('[handleBlur] 失去焦点，item.innerText=', props.item.innerText, 'uid=', props.item.uid)
   emit("blurTextbox", props.item.uid)
 }
 
