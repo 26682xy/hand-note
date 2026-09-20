@@ -16,7 +16,7 @@
         :editMode="editMode"
         @deleteItem="onDeleteItem"
         @clickCheckin="clickCheckinHandler"
-        @updateTextBoxText="updateTextBox"
+        @updateTextBoxText="updateText"
         @addCanvasHeight="addHeight"
         @subCanvasHeight="subHeight"
         @itemMove="onItemMove"
