@@ -6,13 +6,14 @@
       class="text-content"
       :contenteditable="!!item.editing"
       @input="handleInput"
+      @compositionend="handleInput"
       @blur="handleBlur"
       @dblclick.stop="$emit('dblClickText')"
       @touchstart.stop="onTextTouchStart"
       @touchmove.stop="onTextTouchMove"
       @touchend.stop="onTextTouchEnd"
       @touchcancel.stop="onTextTouchEnd"
-    >{{item.innerText}}</div>
+    ></div>
     <div
       v-if="editMode"
       class="resize-handle"
@@ -22,14 +23,47 @@
   </div>
 </template>
 <script setup>
-import {ref,onUnmounted,watch} from "vue";
+import {ref,onUnmounted,watch, nextTick, watchEffect} from "vue";
 const props = defineProps({
   item: Object,
   editMode: Boolean
 })
 const emit = defineEmits(["delete","updateText","resizeTextbox","dblClickText","longPressText","blurTextbox"])
-
 const textRef = ref(null)
+function setCursorToEnd(el) {
+  if (!el) return
+  const range = document.createRange()
+  const sel = window.getSelection()
+  range.selectNodeContents(el)
+  range.collapse(false)
+  sel.removeAllRanges()
+  sel.addRange(range)
+}
+
+// 修复：组件初始化 + item.innerText变更都会把文字同步到DOM，解决初次渲染空白
+watchEffect(async ()=>{
+  await nextTick()
+  if(textRef.value && !props.item.editing){
+    textRef.value.textContent = props.item.innerText ?? ""
+  }
+})
+
+// 编辑状态切换
+watch(()=>props.item.editing, async (val)=>{
+  if(val){
+    await nextTick()
+    if(textRef.value){
+      textRef.value.textContent = props.item.innerText ?? ""
+      textRef.value.focus()
+      setCursorToEnd(textRef.value)
+    }
+  }else{
+    await nextTick()
+    if(textRef.value){
+      textRef.value.textContent = props.item.innerText ?? ""
+    }
+  }
+})
 
 // PC双击；移动端长按触发编辑
 let longPressTimer = null;
@@ -37,21 +71,12 @@ let touchStartX = 0;
 let touchStartY = 0;
 const LONG_PRESS_DELAY = 600; // 长按600ms触发编辑
 const MOVE_THRESHOLD = 10; //移动超过10px判定拖拽，取消长按
-
-// 编辑状态自动聚焦
-watch(()=>props.item.editing, (val)=>{
-  if(val){
-    textRef.value?.focus()
-  }
-})
-
 function clearLongPressTimer(){
   if(longPressTimer){
     clearTimeout(longPressTimer);
     longPressTimer = null;
   }
 }
-
 function onTextTouchStart(e){
   clearLongPressTimer();
   const t = e.touches[0];
@@ -64,7 +89,6 @@ function onTextTouchStart(e){
     }, LONG_PRESS_DELAY);
   }
 }
-
 function onTextTouchMove(e){
   const t = e.touches[0];
   const dx = Math.abs(t.clientX - touchStartX);
@@ -74,17 +98,14 @@ function onTextTouchMove(e){
     clearLongPressTimer();
   }
 }
-
 function onTextTouchEnd(){
   clearLongPressTimer();
 }
-
 let isResizing = false;
 let startW = 0;
 let startH = 0;
 let startClientX = 0;
 let startClientY = 0;
-
 function onMouseMove(e){
   if(!isResizing) return;
   const dw = e.clientX - startClientX;
@@ -93,7 +114,6 @@ function onMouseMove(e){
   const newH = Math.max(40, startH + dh);
   emit("resizeTextbox",props.item.uid, newW, newH);
 }
-
 function onMouseUp(){
   isResizing = false;
   document.removeEventListener("mousemove",onMouseMove);
@@ -101,7 +121,6 @@ function onMouseUp(){
   document.removeEventListener("touchmove",onTouchMove);
   document.removeEventListener("touchend",onTouchEnd);
 }
-
 function onTouchMove(e){
   if(!isResizing) return;
   e.preventDefault();
@@ -112,11 +131,9 @@ function onTouchMove(e){
   const newH = Math.max(40, startH + dh);
   emit("resizeTextbox",props.item.uid, newW, newH);
 }
-
 function onTouchEnd(){
   isResizing = false;
 }
-
 function startMouseResize(evt){
   evt.stopPropagation();
   evt.preventDefault();
@@ -128,7 +145,6 @@ function startMouseResize(evt){
   document.addEventListener("mousemove",onMouseMove);
   document.addEventListener("mouseup",onMouseUp);
 }
-
 function startTouchResize(evt){
   evt.stopPropagation();
   evt.preventDefault();
@@ -141,17 +157,14 @@ function startTouchResize(evt){
   document.addEventListener("touchmove",onTouchMove,{passive:false});
   document.addEventListener("touchend",onTouchEnd);
 }
-
 function handleInput(e){
-  console.log('[handleInput] 输入触发，新文本：', e.target.innerText, '当前item.uid:', props.item.uid)
-  emit("updateText", props.item.uid, e.target.innerText)
+  console.log('[handleInput] 输入触发，新文本：', e.target.textContent, '当前item.uid:', props.item.uid)
+  emit("updateText", props.item.uid, e.target.textContent)
 }
-
 function handleBlur(){
   console.log('[handleBlur] 失去焦点，item.innerText=', props.item.innerText, 'uid=', props.item.uid)
   emit("blurTextbox", props.item.uid)
 }
-
 onUnmounted(()=>{
   clearLongPressTimer();
   onMouseUp();
