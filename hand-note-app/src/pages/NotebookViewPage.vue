@@ -173,6 +173,11 @@ async function confirmPageDelete(){
     const subH = Math.round(window.innerHeight /3);
     store.canvasHeight = Math.max(minH, store.canvasHeight - subH);
   }
+
+  function openStickerUploadModal(){
+  showUploadModal.value = true
+}
+
   
   function openCheckinModal(){
     newCheck.value.name="";

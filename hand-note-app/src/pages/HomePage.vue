@@ -233,6 +233,11 @@ function openCheckinModal(){
   showCheckinModal.value=true;
 }
 
+function openStickerUploadModal(){
+  showUploadModal.value = true
+}
+
+
 
 
 function openSaveModal(){
