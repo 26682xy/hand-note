@@ -15,17 +15,6 @@ const upRoute = require('./routes/uploadRoute');
 app.use("/api/user",userRoute);
 app.use("/api/notebook",noteRoute);
 app.use("/api/upload",upRoute);
-
-// 删除手账
-app.delete('/api/notebook/:id', async (req,res)=>{
-    try{
-      const nid = req.params.id;
-      await db.query("DELETE FROM notebook WHERE id = ?",[nid]);
-      res.json({code:200,msg:"删除成功"})
-    }catch(err){
-      res.json({code:500,msg:"删除失败"})
-    }
-  })
   
 
 const PORT = process.env.PORT||3001;

@@ -20,12 +20,10 @@ export async function reqUploadSticker(formData){
 export async function reqMyStickerList(){
   return api.get("/upload/mystickers");
 }
-
-// 删除手账
+// 删除手账【修复】使用带拦截器的api实例，自动携带token
 export async function reqDeleteNotebook(notebookId){
-    return await axios({
-      method:"DELETE",
-      url:"/api/notebook/"+notebookId
-    })
-  }
-  
+  return await api({
+    method:"DELETE",
+    url:"/notebook/" + notebookId
+  })
+}
