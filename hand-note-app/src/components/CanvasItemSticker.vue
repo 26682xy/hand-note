@@ -1,7 +1,7 @@
 <template>
     <div class="sticker-item" :style="{width:60+'px',height:60+'px'}">
       <div class="item-del" v-if="editMode" @click.stop="$emit('delete')">×</div>
-      <img v-if="item.imgUrl" :src="item.imgUrl" alt="" />
+      <img v-if="item.imgUrl" :src="API_BASE + item.imgUrl" alt="" />
       <span v-else>⭐</span>
     </div>
   </template>
@@ -11,6 +11,7 @@
     editMode: Boolean
   })
   const emit = defineEmits(["delete"])
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
   </script>
   <style scoped>
   .sticker-item{
