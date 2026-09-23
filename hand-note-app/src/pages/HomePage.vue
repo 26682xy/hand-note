@@ -10,47 +10,42 @@
     ></TempCanvasSwitch>
     <div class="canvas-area">
       <CanvasGrid
-  v-if="currentData"
-  :itemList="currentData.items"
-  :canvasHeight="currentData.height"
-  :editMode="editMode"
-  @deleteItem="onDeleteItem"
-  @updateTextBoxText="updateTextBox"
-  @addCanvasHeight="addHeight"
-  @subCanvasHeight="subHeight"
-  @itemMove="onItemMove"
-  @resizeTextbox="handleResizeTextBox"
-/>
-
+        v-if="currentData"
+        :itemList="currentData.items"
+        :canvasHeight="currentData.height"
+        :editMode="editMode"
+        @deleteItem="onDeleteItem"
+        @updateTextBoxText="updateTextBox"
+        @addCanvasHeight="addHeight"
+        @subCanvasHeight="subHeight"
+        @itemMove="onItemMove"
+        @resizeTextbox="handleResizeTextBox"
+      />
     </div>
-
     <div class="top-action">
       <button class="reset-btn" @click="resetAllStatus">更新重置</button>
       <button v-if="!editMode" class="enter-edit" @click="enterEdit">+进入编辑</button>
       <button v-if="!editMode" class="save-btn" @click="openSaveModal">保存</button>
     </div>
-
     <!--底部工具栏-->
     <BottomEditToolbar
-  v-if="editMode"
-  @add-checkin="openCheckinModal"
-  @add-month-stat="addMonthStat"
-  @add-textbox="addTextBox"
-  @open-sticker-upload="openStickerUploadModal"
-  @finish-edit="exitEdit"
-/>
-
+      v-if="editMode"
+      @add-checkin="openCheckinModal"
+      @add-month-stat="addMonthStat"
+      @add-textbox="addTextBox"
+      @open-sticker-upload="openStickerUploadModal"
+      @finish-edit="exitEdit"
+    />
     <div class="bottom-tab" v-else>
       <span class="tab-item active">首页</span>
       <span class="tab-item" @click="$router.push('/notebook-list')">手账本</span>
     </div>
-
     <!--弹窗：新建打卡-->
     <div class="modal-mask" v-if="showCheckinModal" @click.self="showCheckinModal=false">
       <div class="modal">
         <h4>新建打卡项</h4>
-        <input v-model="newCheck.name" placeholder="打卡名称"/>
-        <input type="color" v-model="newCheck.color"/>
+        <input v-model="newCheck.name" placeholder="打卡名称" />
+        <input type="color" v-model="newCheck.color" />
         <div class="modal-row">
           <button @click="showCheckinModal=false">取消</button>
           <button @click="confirmAddCheckin">确认</button>
@@ -61,7 +56,7 @@
     <div class="modal-mask" v-if="showSaveModal" @click.self="showSaveModal=false">
       <div class="modal">
         <h4>保存到手账本</h4>
-        <input v-model="saveTitle" placeholder="手账标题"/>
+        <input v-model="saveTitle" placeholder="手账标题" />
         <div class="modal-row">
           <button @click="showSaveModal=false">取消</button>
           <button @click="confirmSave">保存</button>
@@ -72,7 +67,7 @@
     <div class="modal-mask" v-if="showUploadModal" @click.self="showUploadModal=false">
       <div class="modal">
         <h4>上传图片贴纸</h4>
-        <input type="file" ref="fileRef" accept="image/*"/>
+        <input type="file" ref="fileRef" accept="image/*" />
         <div class="modal-row">
           <button @click="showUploadModal=false">取消</button>
           <button @click="submitUpload">上传</button>
@@ -92,29 +87,32 @@ import CanvasGrid from "@/components/CanvasGrid.vue";
 
 const canvasStore = useHomeTempCanvasStore();
 const editMode = ref(false);
-const uncheckTargetUid = ref(null);
-
 const showCheckinModal = ref(false);
 const showSaveModal = ref(false);
-const showUncheckModal = ref(false);
 const showUploadModal = ref(false);
 const fileRef = ref(null);
 const saveTitle = ref("");
 const newCheck = ref({name:"",color:"#4299e1"});
-
 const currentData = computed(()=>canvasStore.getCurrent())
+
+// 获取今日日期字符串，用于保存手账note_date
+function getTodayStr(){
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = String(t.getMonth()+1).padStart(2,"0");
+  const d = String(t.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
 
 onMounted(()=>{
   canvasStore.initIfEmpty();
 })
+
 function switchCanvas(id){
   canvasStore.curTmpCanvasId = id;
 }
 function enterEdit(){editMode.value=true;}
 function exitEdit(){editMode.value=false;}
-
-
-
 
 function onDeleteItem(uid){
   const arr = currentData.value.items;
@@ -125,7 +123,6 @@ function onDeleteItem(uid){
 function onItemMove(item){
   canvasStore.persistSave();
 }
-
 function handleResizeTextBox(uid,newW,newH){
   const it = currentData.value.items.find(x=>x.uid===uid);
   if(it){
@@ -133,25 +130,6 @@ function handleResizeTextBox(uid,newW,newH){
     it.h = newH;
     canvasStore.persistSave();
   }
-}
-
-function clickCheckinHandler(uid){
-  if(editMode.value) return;
-  const it = currentData.value.items.find(x=>x.uid===uid);
-  if(!it) return;
-  if(it.done){
-    uncheckTargetUid.value = uid;
-    showUncheckModal.value=true;
-  }else{
-    it.done=true;
-    canvasStore.persistSave();
-  }
-}
-function confirmUncheck(){
-  const it = currentData.value.items.find(x=>x.uid===uncheckTargetUid.value);
-  if(it) it.done=false;
-  showUncheckModal.value=false;
-  canvasStore.persistSave();
 }
 
 function updateTextBox(uid,text){
@@ -179,13 +157,12 @@ function subHeight(){
 
 function resetAllStatus(){
   currentData.value.items.forEach(it=>{
-    if(it.type==="checkin") it.done=false;
     if(it.type==="textbox") it.innerText="";
   })
   canvasStore.persistSave();
 }
 
-// 新增：添加月度统计画布元素
+// 添加月度统计画布元素
 function addMonthStat(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
@@ -198,7 +175,6 @@ function addMonthStat(){
   canvasStore.persistSave();
 }
 
-
 function confirmAddCheckin(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
@@ -206,12 +182,12 @@ function confirmAddCheckin(){
     type:"checkin",
     x:64,y:64,
     checkName:newCheck.value.name||"打卡项",
-    checkColor:newCheck.value.color,
-    done:false
+    checkColor:newCheck.value.color
   })
   showCheckinModal.value=false;
   canvasStore.persistSave();
 }
+
 function addTextBox(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
@@ -219,6 +195,7 @@ function addTextBox(){
   })
   canvasStore.persistSave();
 }
+
 async function submitUpload(){
   const fd = new FormData();
   fd.append("img",fileRef.value.files[0]);
@@ -231,31 +208,25 @@ async function submitUpload(){
   canvasStore.persistSave();
 }
 
-
-
-
 function openCheckinModal(){
   newCheck.value.name="";
   showCheckinModal.value=true;
 }
-
 function openStickerUploadModal(){
   showUploadModal.value = true
 }
-
-
-
-
 function openSaveModal(){
   saveTitle.value="";
   showSaveModal.value=true;
 }
+
 async function confirmSave(){
   await reqSaveNotebook({
     title:saveTitle.value||"未命名手账",
     canvasHeight:currentData.value.height,
     canvasItems:currentData.value.items,
-    notebookId:null
+    notebookId:null,
+    noteDate:getTodayStr()
   })
   alert("保存成功");
   showSaveModal.value=false;

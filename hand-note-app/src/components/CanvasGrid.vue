@@ -16,6 +16,7 @@
             v-if="it.type==='checkin'"
             :item="it"
             :editMode="editMode"
+            :render-date="canvasRenderDate"
             @delete="$emit('deleteItem',it.uid)"
             @clickCheck="$emit('clickCheckin',it.uid)"
           />
@@ -54,13 +55,18 @@
 <script setup>
 import {ref} from "vue";
 import CanvasItemCheckin from "./CanvasItemCheckin.vue";
-import CanvasItemMonthStat from "./CanvasItemMonthStat.vue"; //新增
+import CanvasItemMonthStat from "./CanvasItemMonthStat.vue";
 import CanvasItemTextbox from "./CanvasItemTextbox.vue";
 import CanvasItemSticker from "./CanvasItemSticker.vue";
 const props = defineProps({
   itemList:{type:Array,default:()=>[]},
   canvasHeight:{type:Number,default:600},
-  editMode:{type:Boolean,default:false}
+  editMode:{type:Boolean,default:false},
+  // 新增：画布渲染日期，传给打卡组件UI展示；不传则子组件内部default取今日
+  canvasRenderDate:{
+    type:String,
+    default:undefined
+  }
 })
 const emit = defineEmits([
   "deleteItem","clickCheckin","updateTextBoxText",
@@ -77,7 +83,6 @@ function getCanvasOffset(){
 }
 // 双击文字框开启编辑
 function handleDblClickTextItem(uid){
-  // 关闭全部文本编辑状态
   props.itemList.forEach(it=>{
     if(it.type === "textbox"){
       it.editing = false
@@ -99,7 +104,6 @@ function handleBlurEditItem(uid){
 //鼠标拖拽
 function startDrag(evt,item){
   if(!props.editMode) return;
-  // 如果文字框正在编辑，禁止拖拽
   if(item.type === "textbox" && item.editing){
     return
   }
@@ -123,7 +127,6 @@ function onMouseMove(e){
 //移动端触摸拖拽
 function startTouchDrag(evt,item){
   if(!props.editMode) return;
-  // 如果文字框正在编辑，禁止拖拽
   if(item.type === "textbox" && item.editing){
     return
   }

@@ -3,66 +3,90 @@
     <div class="item-del" v-if="editMode" @click.stop="$emit('delete')">×</div>
     <div
       class="check-circle"
-      :style="{backgroundColor: localChecked ? item.checkColor : '#bbbbbb'}"
+      :style="{backgroundColor: currentItemChecked ? item.checkColor : '#bbbbbb'}"
       @click.stop="onCircleClick"
     ></div>
     <div class="check-name">{{ item.checkName }}</div>
-    <!--补打日期弹窗-->
-    <div class="mask" v-if="showDatePopup" @click.self="showDatePopup=false">
+
+    <!--仅用于取消打卡确认弹窗，不再有日期选择-->
+    <div class="mask" v-if="showConfirmPopup" @click.self="showConfirmPopup=false">
       <div class="popup">
-        <h5>选择打卡日期</h5>
-        <input type="date" v-model-value="selDate" @input="selDate=$event.target.value" />
+        <h5>确认取消今日打卡？</h5>
         <div class="btns">
-          <button @click="showDatePopup=false">取消</button>
-          <button v-if="!isSelDateChecked" @click="doCheck">打卡</button>
-          <button v-if="isSelDateChecked" class="del-btn" @click="cancelCheck">取消打卡</button>
+          <button @click="showConfirmPopup=false">保留打卡</button>
+          <button class="del-btn" @click="doCancelCheck">确认取消</button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script setup>
 import {ref,computed} from "vue";
 import {useUserStore} from "@/stores/user";
 import {reqDoCheckin,reqCancelCheckin} from "@/api/checkinApi";
+
 const props = defineProps({
   item: Object,
-  editMode: Boolean
+  editMode: Boolean,
+  // UI圆圈展示哪一天打卡状态：首页不传自动取今日；历史手账传入手账日期
+  renderDate:{
+    type: String,
+    default: ()=>{
+      const t = new Date();
+      const y = t.getFullYear();
+      const m = String(t.getMonth()+1).padStart(2,"0");
+      const d = String(t.getDate()).padStart(2,"0");
+      return `${y}-${m}-${d}`;
+    }
+  }
 })
 const emit = defineEmits(["delete"]);
 const userStore = useUserStore();
-const showDatePopup = ref(false);
-const selDate = ref("");
-// 简易：取今天做默认
-const today = new Date();
-const defaultDay = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
 
-const isSelDateChecked = computed(()=>{
-  if(!selDate.value) return false;
-  const [y,m,d] = selDate.value.split("-");
+// 弹窗：仅取消打卡确认
+const showConfirmPopup = ref(false);
+
+// 真实操作：固定今天，不能选历史日期
+const todayObj = new Date();
+const realToday = `${todayObj.getFullYear()}-${String(todayObj.getMonth()+1).padStart(2,"0")}-${String(todayObj.getDate()).padStart(2,"0")}`;
+const [ty,tm,td] = realToday.split("-");
+// 真实今天是否已经打卡（用于点击交互）
+const isRealTodayChecked = computed(()=>{
+  return userStore.isDateChecked(Number(ty),Number(tm),Number(td));
+})
+
+// UI圆圈展示状态：受 renderDate 控制（首页今日 / 历史手账日期）
+const currentItemChecked = computed(()=>{
+  if(!props.renderDate) return false;
+  const [y,m,d] = props.renderDate.split("-");
   return userStore.isDateChecked(Number(y),Number(m),Number(d));
 })
 
-// 本组件UI显示只做交互入口；不维护自身done状态
-const localChecked = ref(false);
-
 function onCircleClick(){
   if(props.editMode) return;
-  selDate.value = defaultDay;
-  showDatePopup.value = true;
+  // 真实今天未打卡 → 直接打卡
+  if(!isRealTodayChecked.value){
+    doCheck();
+  }else{
+    // 真实今天已打卡 → 弹出确认取消弹窗
+    showConfirmPopup.value = true;
+  }
 }
 
+// 打卡：固定打今天
 async function doCheck(){
-  await reqDoCheckin(selDate.value);
-  userStore.cacheAddCheckin(selDate.value);
-  showDatePopup.value = false;
+  await reqDoCheckin(realToday);
+  userStore.cacheAddCheckin(realToday);
 }
-async function cancelCheck(){
-  await reqCancelCheckin(selDate.value);
-  userStore.cacheRemoveCheckin(selDate.value);
-  showDatePopup.value = false;
+// 取消打卡：取消今天打卡
+async function doCancelCheck(){
+  await reqCancelCheckin(realToday);
+  userStore.cacheRemoveCheckin(realToday);
+  showConfirmPopup.value = false;
 }
 </script>
+
 <style scoped>
 .checkin-item{
   position:absolute;
@@ -109,7 +133,6 @@ async function cancelCheck(){
   border-radius:8px;
 }
 .popup h5{margin-bottom:10px;}
-.popup input{width:100%;margin-bottom:10px;}
-.btns{display:flex;gap:8px;justify-content:flex-end;}
+.btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
 .del-btn{background:#dd4444;color:#fff;border:none;}
 </style>
