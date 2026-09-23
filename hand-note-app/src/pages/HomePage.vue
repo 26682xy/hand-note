@@ -10,18 +10,18 @@
     ></TempCanvasSwitch>
     <div class="canvas-area">
       <CanvasGrid
-        v-if="currentData"
-        :itemList="currentData.items"
-        :canvasHeight="currentData.height"
-        :editMode="editMode"
-        @deleteItem="onDeleteItem"
-        @clickCheckin="clickCheckinHandler"
-        @updateTextBoxText="updateTextBox"
-        @addCanvasHeight="addHeight"
-        @subCanvasHeight="subHeight"
-        @itemMove="onItemMove"
-        @resizeTextbox="handleResizeTextBox"
-      />
+  v-if="currentData"
+  :itemList="currentData.items"
+  :canvasHeight="currentData.height"
+  :editMode="editMode"
+  @deleteItem="onDeleteItem"
+  @updateTextBoxText="updateTextBox"
+  @addCanvasHeight="addHeight"
+  @subCanvasHeight="subHeight"
+  @itemMove="onItemMove"
+  @resizeTextbox="handleResizeTextBox"
+/>
+
     </div>
 
     <div class="top-action">
@@ -32,12 +32,14 @@
 
     <!--底部工具栏-->
     <BottomEditToolbar
-      v-if="editMode"
-      @add-checkin="openCheckinModal"
-      @add-textbox="addTextBox"
-      @open-sticker-upload="openStickerUploadModal"
-      @finish-edit="exitEdit"
-    />
+  v-if="editMode"
+  @add-checkin="openCheckinModal"
+  @add-month-stat="addMonthStat"
+  @add-textbox="addTextBox"
+  @open-sticker-upload="openStickerUploadModal"
+  @finish-edit="exitEdit"
+/>
+
     <div class="bottom-tab" v-else>
       <span class="tab-item active">首页</span>
       <span class="tab-item" @click="$router.push('/notebook-list')">手账本</span>
@@ -63,16 +65,6 @@
         <div class="modal-row">
           <button @click="showSaveModal=false">取消</button>
           <button @click="confirmSave">保存</button>
-        </div>
-      </div>
-    </div>
-    <!--取消打卡弹窗-->
-    <div class="modal-mask" v-if="showUncheckModal" @click.self="showUncheckModal=false">
-      <div class="modal">
-        <h4>是否取消今日打卡？</h4>
-        <div class="modal-row">
-          <button @click="showUncheckModal=false">保留打卡</button>
-          <button @click="confirmUncheck">取消打卡</button>
         </div>
       </div>
     </div>
@@ -192,6 +184,20 @@ function resetAllStatus(){
   })
   canvasStore.persistSave();
 }
+
+// 新增：添加月度统计画布元素
+function addMonthStat(){
+  const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
+  currentData.value.items.push({
+    uid,
+    type:"monthStat",
+    x:100,
+    y:100,
+    statTitle:"月度打卡统计"
+  })
+  canvasStore.persistSave();
+}
+
 
 function confirmAddCheckin(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);

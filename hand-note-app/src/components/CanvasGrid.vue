@@ -19,6 +19,12 @@
             @delete="$emit('deleteItem',it.uid)"
             @clickCheck="$emit('clickCheckin',it.uid)"
           />
+          <CanvasItemMonthStat
+            v-if="it.type==='monthStat'"
+            :item="it"
+            :editMode="editMode"
+            @delete="$emit('deleteItem',it.uid)"
+          />
           <CanvasItemTextbox
             v-if="it.type==='textbox'"
             :item="it"
@@ -48,6 +54,7 @@
 <script setup>
 import {ref} from "vue";
 import CanvasItemCheckin from "./CanvasItemCheckin.vue";
+import CanvasItemMonthStat from "./CanvasItemMonthStat.vue"; //新增
 import CanvasItemTextbox from "./CanvasItemTextbox.vue";
 import CanvasItemSticker from "./CanvasItemSticker.vue";
 const props = defineProps({
@@ -59,18 +66,15 @@ const emit = defineEmits([
   "deleteItem","clickCheckin","updateTextBoxText",
   "addCanvasHeight","subCanvasHeight","itemMove","resizeTextbox"
 ])
-
 const wrapRef = ref(null);
 const canvasRef = ref(null);
 const GRID = 32;
 let dragItem = null;
 let offsetX=0,offsetY=0;
-
 function getCanvasOffset(){
   const rect = canvasRef.value.getBoundingClientRect();
   return rect;
 }
-
 // 双击文字框开启编辑
 function handleDblClickTextItem(uid){
   // 关闭全部文本编辑状态
@@ -84,7 +88,6 @@ function handleDblClickTextItem(uid){
     target.editing = true
   }
 }
-
 // 文字框失去焦点关闭编辑
 function handleBlurEditItem(uid){
   const target = props.itemList.find(i=>i.uid === uid)
@@ -93,7 +96,6 @@ function handleBlurEditItem(uid){
     target.editing = false
   }
 }
-
 //鼠标拖拽
 function startDrag(evt,item){
   if(!props.editMode) return;
@@ -109,7 +111,6 @@ function startDrag(evt,item){
   document.addEventListener("mousemove",onMouseMove);
   document.addEventListener("mouseup",stopDrag);
 }
-
 function onMouseMove(e){
   if(!dragItem) return;
   const crect = getCanvasOffset();
@@ -119,7 +120,6 @@ function onMouseMove(e){
   dragItem.y = Math.round(my / GRID)*GRID;
   emit("itemMove",dragItem);
 }
-
 //移动端触摸拖拽
 function startTouchDrag(evt,item){
   if(!props.editMode) return;
@@ -136,7 +136,6 @@ function startTouchDrag(evt,item){
   document.addEventListener("touchmove",onTouchMove,{passive:false});
   document.addEventListener("touchend",stopDrag);
 }
-
 function onTouchMove(evt){
   if(!dragItem) return;
   evt.preventDefault();
@@ -148,7 +147,6 @@ function onTouchMove(evt){
   dragItem.y = Math.round(my / GRID)*GRID;
   emit("itemMove",dragItem);
 }
-
 function stopDrag(){
   dragItem=null;
   document.removeEventListener("mousemove",onMouseMove);

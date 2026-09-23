@@ -17,22 +17,24 @@
           :canvasHeight="store.canvasHeight"
           :editMode="store.isEditMode"
           @deleteItem="onDeleteItem"
-          @clickCheckin="clickCheckinHandler"
           @updateTextBoxText="updateTextBox"
           @addCanvasHeight="addHeight"
           @subCanvasHeight="subHeight"
           @itemMove="onItemMove"
           @resizeTextbox="handleResizeTextBox"
         />
+
       </div>
   
       <BottomEditToolbar
         v-if="store.isEditMode"
         @add-checkin="openCheckinModal"
+        @add-month-stat="addMonthStat"
         @add-textbox="addTextBox"
         @open-sticker-upload="openStickerUploadModal"
         @finish-edit="saveAndExit"
       />
+
       <div class="bottom-empty" v-else style="height:70px"></div>
   
       <!--弹窗部分和首页一致-->
@@ -44,15 +46,6 @@
           <div class="modal-row">
             <button @click="showCheckinModal=false">取消</button>
             <button @click="confirmAddCheckin">确认</button>
-          </div>
-        </div>
-      </div>
-      <div class="modal-mask" v-if="showUncheckModal" @click.self="showUncheckModal=false">
-        <div class="modal">
-          <h4>是否取消今日打卡？</h4>
-          <div class="modal-row">
-            <button @click="showUncheckModal=false">保留打卡</button>
-            <button @click="confirmUncheck">取消打卡</button>
           </div>
         </div>
       </div>
@@ -94,7 +87,6 @@
   const store = useNotebookEditStore();
   
   const showCheckinModal = ref(false);
-  const showUncheckModal = ref(false);
   const showUploadModal = ref(false);
   const fileRef = ref(null);
   const uncheckTargetUid = ref(null);
@@ -137,29 +129,23 @@ async function confirmPageDelete(){
   }
 }
 
+function addMonthStat(){
+  const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
+  store.items.push({
+    uid,
+    type:"monthStat",
+    x:100,
+    y:100,
+    statTitle:"月度打卡统计"
+  })
+}
+
 
   function onDeleteItem(uid){
     const idx = store.items.findIndex(i=>i.uid===uid);
     if(idx>-1) store.items.splice(idx,1);
   }
   function onItemMove(item){}
-  
-  function clickCheckinHandler(uid){
-    if(store.isEditMode) return;
-    const it = store.items.find(x=>x.uid===uid);
-    if(!it) return;
-    if(it.done){
-      uncheckTargetUid.value = uid;
-      showUncheckModal.value=true;
-    }else{
-      it.done=true;
-    }
-  }
-  function confirmUncheck(){
-    const it = store.items.find(x=>x.uid===uncheckTargetUid.value);
-    if(it) it.done=false;
-    showUncheckModal.value=false;
-  }
   function updateTextBox(uid,text){
     const it = store.items.find(x=>x.uid===uid);
     if(it) it.innerText = text;

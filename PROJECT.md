@@ -22,6 +22,7 @@ hand-note-app
 │   ├── components
 │   │   ├── CanvasGrid.vue          //通用网格画布组件（复用！首页、手账编辑页共用）
 │   │   ├── CanvasItemCheckin.vue   //打卡元素组件
+│   │   ├── CanvasItemMonthStat.vue   //月度打卡统计组件
 │   │   ├── CanvasItemTextbox.vue  //文字框组件
 │   │   ├── CanvasItemSticker.vue  //贴纸（支持用户上传图片贴纸）
 │   │   ├── BottomEditToolbar.vue  //底部编辑工具栏（打卡/文字框/上传贴纸）
@@ -35,6 +36,7 @@ hand-note-app
 │   └── api
 │       ├── userApi.js
 │       └── notebookApi.js
+│       └── checkinApi.js
 
 ###  后端目录
 hand-note-server
@@ -47,7 +49,9 @@ hand-note-server
 │   ├── userRoute.js
 │   ├── notebookRoute.js
 │   └── uploadRoute.js //贴纸图片上传接口
+│   └── checkinRoute.js
 ├── public
 │   └── upload         //上传贴纸图片存放目录
 └── sql
     └── init.sql       //数据库建表脚本
+
