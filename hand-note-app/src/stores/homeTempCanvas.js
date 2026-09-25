@@ -1,7 +1,6 @@
 import {defineStore} from "pinia";
 const GRID =32;
 const STORAGE_KEY = "handnote_home_temp_canvas";
-
 export const useHomeTempCanvasStore = defineStore("homeTempCanvas",{
   state:()=>({
     curTmpCanvasId:null,
@@ -16,6 +15,10 @@ export const useHomeTempCanvasStore = defineStore("homeTempCanvas",{
           const arr = JSON.parse(raw);
           if(Array.isArray(arr) && arr.length>0){
             this.tmpCanvasList = arr;
+            // ✅修复：读取本地画布后，如果没有选中id，自动选中第一个画布
+            if(!this.curTmpCanvasId){
+              this.curTmpCanvasId = this.tmpCanvasList[0].id;
+            }
           }
         }
       }catch(e){
@@ -29,9 +32,13 @@ export const useHomeTempCanvasStore = defineStore("homeTempCanvas",{
       const idx = this.tmpCanvasList.findIndex(x=>x.id===removeId);
       if(idx===-1) return;
       this.tmpCanvasList.splice(idx,1);
-      // 如果删除的是当前激活tab，自动切到第0个
+      // ✅修复：删除当前激活tab，做数组判空，防止数组为空时报错
       if(this.curTmpCanvasId === removeId){
-        this.curTmpCanvasId = this.tmpCanvasList[0].id;
+        if(this.tmpCanvasList.length > 0){
+          this.curTmpCanvasId = this.tmpCanvasList[0].id;
+        }else{
+          this.curTmpCanvasId = null;
+        }
       }
       this.saveLocalStorage();
     },

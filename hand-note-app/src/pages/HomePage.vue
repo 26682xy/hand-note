@@ -84,7 +84,6 @@ import UserHeaderBar from "@/components/UserHeaderBar.vue";
 import TempCanvasSwitch from "@/components/TempCanvasSwitch.vue";
 import BottomEditToolbar from "@/components/BottomEditToolbar.vue";
 import CanvasGrid from "@/components/CanvasGrid.vue";
-
 const canvasStore = useHomeTempCanvasStore();
 const editMode = ref(false);
 const showCheckinModal = ref(false);
@@ -94,7 +93,6 @@ const fileRef = ref(null);
 const saveTitle = ref("");
 const newCheck = ref({name:"",color:"#4299e1"});
 const currentData = computed(()=>canvasStore.getCurrent())
-
 // 获取今日日期字符串，用于保存手账note_date
 function getTodayStr(){
   const t = new Date();
@@ -103,17 +101,20 @@ function getTodayStr(){
   const d = String(t.getDate()).padStart(2,"0");
   return `${y}-${m}-${d}`;
 }
-
 onMounted(()=>{
   canvasStore.initIfEmpty();
+  // 页面打开自动激活画布
+  if(canvasStore.tmpCanvasList.length > 0){
+    canvasStore.curTmpCanvasId = canvasStore.tmpCanvasList[0].id
+  }else{
+    canvasStore.newTempCanvas()
+  }
 })
-
 function switchCanvas(id){
   canvasStore.curTmpCanvasId = id;
 }
 function enterEdit(){editMode.value=true;}
 function exitEdit(){editMode.value=false;}
-
 function onDeleteItem(uid){
   const arr = currentData.value.items;
   const idx = arr.findIndex(i=>i.uid===uid);
@@ -131,7 +132,6 @@ function handleResizeTextBox(uid,newW,newH){
     canvasStore.persistSave();
   }
 }
-
 function updateTextBox(uid,text){
   console.log('[HomePage updateTextBox] uid',uid,'text:', text)
   const it = currentData.value.items.find(x=>x.uid===uid);
@@ -142,7 +142,6 @@ function updateTextBox(uid,text){
     canvasStore.persistSave();
   }
 }
-
 function addHeight(){
   const addH = Math.round(window.innerHeight /3);
   currentData.value.height += addH;
@@ -154,14 +153,12 @@ function subHeight(){
   currentData.value.height = Math.max(minH, currentData.value.height - subH);
   canvasStore.persistSave();
 }
-
 function resetAllStatus(){
   currentData.value.items.forEach(it=>{
     if(it.type==="textbox") it.innerText="";
   })
   canvasStore.persistSave();
 }
-
 // 添加月度统计画布元素
 function addMonthStat(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
@@ -174,7 +171,6 @@ function addMonthStat(){
   })
   canvasStore.persistSave();
 }
-
 function confirmAddCheckin(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
@@ -187,7 +183,6 @@ function confirmAddCheckin(){
   showCheckinModal.value=false;
   canvasStore.persistSave();
 }
-
 function addTextBox(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
@@ -195,7 +190,6 @@ function addTextBox(){
   })
   canvasStore.persistSave();
 }
-
 async function submitUpload(){
   const fd = new FormData();
   fd.append("img",fileRef.value.files[0]);
@@ -207,7 +201,6 @@ async function submitUpload(){
   showUploadModal.value=false;
   canvasStore.persistSave();
 }
-
 function openCheckinModal(){
   newCheck.value.name="";
   showCheckinModal.value=true;
@@ -219,7 +212,6 @@ function openSaveModal(){
   saveTitle.value="";
   showSaveModal.value=true;
 }
-
 async function confirmSave(){
   await reqSaveNotebook({
     title:saveTitle.value||"未命名手账",
