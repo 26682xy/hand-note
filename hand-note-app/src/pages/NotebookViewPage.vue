@@ -125,14 +125,18 @@ function handleResizeTextBox([uid,newW,newH]){
 }
 function addMonthStat(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
+  const now = new Date();
   store.items.push({
     uid,
     type:"monthStat",
     x:100,
     y:100,
-    statTitle:"月度打卡统计"
+    statTitle:"月度打卡统计",
+    statYear: now.getFullYear(),
+    statMonth: now.getMonth()+1
   })
 }
+
 function onDeleteItem(uid){
   const idx = store.items.findIndex(i=>i.uid===uid);
   if(idx>-1) store.items.splice(idx,1);

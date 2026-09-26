@@ -20,11 +20,14 @@
             @delete="$emit('deleteItem',it.uid)"
             @clickCheck="$emit('clickCheckin',it.uid)"
           />
+          <!-- ✅增加 prop month-check-dates -->
           <CanvasItemMonthStat
             v-if="it.type==='monthStat'"
             :item="it"
             :editMode="editMode"
+            :month-check-dates="getMonthCheckArr(it.statYear, it.statMonth)"
             @delete="$emit('deleteItem',it.uid)"
+            @updateYm="handleUpdateMonthStatYm"
           />
           <CanvasItemTextbox
             v-if="it.type==='textbox'"
@@ -53,16 +56,17 @@
   </div>
 </template>
 <script setup>
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import CanvasItemCheckin from "./CanvasItemCheckin.vue";
 import CanvasItemMonthStat from "./CanvasItemMonthStat.vue";
 import CanvasItemTextbox from "./CanvasItemTextbox.vue";
 import CanvasItemSticker from "./CanvasItemSticker.vue";
+import {useUserStore} from "@/stores/user";
+
 const props = defineProps({
   itemList:{type:Array,default:()=>[]},
   canvasHeight:{type:Number,default:600},
   editMode:{type:Boolean,default:false},
-  // 新增：画布渲染日期，传给打卡组件UI展示；不传则子组件内部default取今日
   canvasRenderDate:{
     type:String,
     default:undefined
@@ -70,18 +74,46 @@ const props = defineProps({
 })
 const emit = defineEmits([
   "deleteItem","clickCheckin","updateTextBoxText",
-  "addCanvasHeight","subCanvasHeight","itemMove","resizeTextbox"
+  "addCanvasHeight","subCanvasHeight","itemMove","resizeTextbox",
+  "updateYm"
 ])
+const userStore = useUserStore();
+
 const wrapRef = ref(null);
 const canvasRef = ref(null);
 const GRID = 32;
 let dragItem = null;
 let offsetX=0,offsetY=0;
+
+// 根据年月从pinia缓存拿到打卡日期数组
+function getMonthCheckArr(y,m){
+  if(!y||!m) return [];
+  const key = `${y}-${String(m).padStart(2,"0")}`;
+  return userStore.monthCheckinCache[key] || [];
+}
+
+// 接收子组件年月变更
+function handleUpdateMonthStatYm(uid, year, month){
+  const target = props.itemList.find(i=>i.uid === uid);
+  if(target){
+    target.statYear = year;
+    target.statMonth = month;
+  }
+}
+
+// 监听画布item列表，当有monthStat元素，父组件预加载对应月份打卡
+watch(()=>props.itemList, async (list)=>{
+  const statItems = list.filter(it=>it.type === "monthStat" && it.statYear && it.statMonth);
+  for(const si of statItems){
+    await userStore.fetchMonthCheckin(si.statYear, si.statMonth);
+  }
+},{deep:true});
+
 function getCanvasOffset(){
   const rect = canvasRef.value.getBoundingClientRect();
   return rect;
 }
-// 双击文字框开启编辑
+
 function handleDblClickTextItem(uid){
   props.itemList.forEach(it=>{
     if(it.type === "textbox"){
@@ -93,15 +125,14 @@ function handleDblClickTextItem(uid){
     target.editing = true
   }
 }
-// 文字框失去焦点关闭编辑
+
 function handleBlurEditItem(uid){
   const target = props.itemList.find(i=>i.uid === uid)
-  console.log('[handleBlurEditItem] 关闭编辑，uid=', uid, 'target.innerText=', target?.innerText)
   if(target){
     target.editing = false
   }
 }
-//鼠标拖拽
+
 function startDrag(evt,item){
   if(!props.editMode) return;
   if(item.type === "textbox" && item.editing){
@@ -124,7 +155,7 @@ function onMouseMove(e){
   dragItem.y = Math.round(my / GRID)*GRID;
   emit("itemMove",dragItem);
 }
-//移动端触摸拖拽
+
 function startTouchDrag(evt,item){
   if(!props.editMode) return;
   if(item.type === "textbox" && item.editing){

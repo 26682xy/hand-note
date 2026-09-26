@@ -169,15 +169,19 @@ function resetAllStatus(){
 }
 function addMonthStat(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
+  const now = new Date();
   currentData.value.items.push({
     uid,
     type:"monthStat",
     x:100,
     y:100,
-    statTitle:"月度打卡统计"
+    statTitle:"月度打卡统计",
+    statYear: now.getFullYear(),
+    statMonth: now.getMonth()+1
   })
   canvasStore.persistSave();
 }
+
 function confirmAddCheckin(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
