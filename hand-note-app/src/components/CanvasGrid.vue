@@ -105,9 +105,14 @@ function handleUpdateMonthStatYm(uid, year, month){
 watch(()=>props.itemList, async (list)=>{
   const statItems = list.filter(it=>it.type === "monthStat" && it.statYear && it.statMonth);
   for(const si of statItems){
+    const key = `${si.statYear}-${String(si.statMonth).padStart(2,"0")}`;
+    // 如果该月份已经存在本地缓存，则不再重复请求接口，防止冲掉前端临时打卡状态
+    if(userStore.monthCheckinCache[key]) continue;
     await userStore.fetchMonthCheckin(si.statYear, si.statMonth);
   }
 },{deep:true});
+
+
 
 function getCanvasOffset(){
   const rect = canvasRef.value.getBoundingClientRect();

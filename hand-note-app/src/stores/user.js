@@ -1,7 +1,6 @@
 import {defineStore} from "pinia";
 import {reqGetMonthCheckin} from "@/api/checkinApi";
 import {useHomeTempCanvasStore} from "./homeTempCanvas";
-
 export const useUserStore = defineStore("user",{
   state:()=>({
     username:"",
@@ -33,12 +32,15 @@ export const useUserStore = defineStore("user",{
       const canvasStore = useHomeTempCanvasStore();
       canvasStore.clearCanvasStore();
     },
-    // 获取某月打卡，存入缓存
+    // 获取某月打卡，存入缓存：后端数据与本地缓存合并，不直接覆盖
     async fetchMonthCheckin(year,month){
       const key = `${year}-${String(month).padStart(2,"0")}`;
       const res = await reqGetMonthCheckin(year,month);
       if(res.code===200){
-        this.monthCheckinCache[key] = res.data;
+        const dbList = res.data || [];
+        const localList = this.monthCheckinCache[key] || [];
+        const mergeSet = new Set([...dbList,...localList]);
+        this.monthCheckinCache[key] = Array.from(mergeSet);
       }
       return res;
     },
