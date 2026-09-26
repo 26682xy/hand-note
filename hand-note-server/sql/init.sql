@@ -19,6 +19,16 @@ CREATE TABLE `notebooks` (
   update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- =========新增：首页用户临时画布存储表=========
+CREATE TABLE `home_user_canvas` (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL UNIQUE COMMENT '一个用户仅一条记录',
+  canvas_list LONGTEXT COMMENT 'JSON存储tmpCanvasList数组',
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- 用户上传贴纸表
 CREATE TABLE `user_stickers` (
   id INT PRIMARY KEY AUTO_INCREMENT,

@@ -1,5 +1,13 @@
 <template>
   <div class="home-page">
+    <!-- 加载遮罩：拉取首页画布时显示 -->
+    <div class="loading-mask" v-if="canvasStore.loading">
+      <div class="loading-box">
+        <div class="spinner"></div>
+        <div class="loading-text">加载画布中…</div>
+      </div>
+    </div>
+
     <UserHeaderBar></UserHeaderBar>
     <TempCanvasSwitch
       :list="canvasStore.tmpCanvasList"
@@ -10,7 +18,7 @@
     ></TempCanvasSwitch>
     <div class="canvas-area">
       <CanvasGrid
-        v-if="currentData"
+        v-if="currentData && !canvasStore.loading"
         :itemList="currentData.items"
         :canvasHeight="currentData.height"
         :editMode="editMode"
@@ -22,26 +30,26 @@
         @resizeTextbox="handleResizeTextBox"
       />
     </div>
-    <div class="top-action">
+    <div class="top-action" v-if="!canvasStore.loading">
       <button class="reset-btn" @click="resetAllStatus">更新重置</button>
       <button v-if="!editMode" class="enter-edit" @click="enterEdit">+进入编辑</button>
       <button v-if="!editMode" class="save-btn" @click="openSaveModal">保存</button>
     </div>
     <!--底部工具栏-->
     <BottomEditToolbar
-      v-if="editMode"
+      v-if="editMode && !canvasStore.loading"
       @add-checkin="openCheckinModal"
       @add-month-stat="addMonthStat"
       @add-textbox="addTextBox"
       @open-sticker-upload="openStickerUploadModal"
       @finish-edit="exitEdit"
     />
-    <div class="bottom-tab" v-else>
+    <div class="bottom-tab" v-if="!editMode && !canvasStore.loading">
       <span class="tab-item active">首页</span>
       <span class="tab-item" @click="$router.push('/notebook-list')">手账本</span>
     </div>
     <!--弹窗：新建打卡-->
-    <div class="modal-mask" v-if="showCheckinModal" @click.self="showCheckinModal=false">
+    <div class="modal-mask" v-if="showCheckinModal && !canvasStore.loading" @click.self="showCheckinModal=false">
       <div class="modal">
         <h4>新建打卡项</h4>
         <input v-model="newCheck.name" placeholder="打卡名称" />
@@ -53,7 +61,7 @@
       </div>
     </div>
     <!--保存弹窗-->
-    <div class="modal-mask" v-if="showSaveModal" @click.self="showSaveModal=false">
+    <div class="modal-mask" v-if="showSaveModal && !canvasStore.loading" @click.self="showSaveModal=false">
       <div class="modal">
         <h4>保存到手账本</h4>
         <input v-model="saveTitle" placeholder="手账标题" />
@@ -64,7 +72,7 @@
       </div>
     </div>
     <!--贴纸上传弹窗-->
-    <div class="modal-mask" v-if="showUploadModal" @click.self="showUploadModal=false">
+    <div class="modal-mask" v-if="showUploadModal && !canvasStore.loading" @click.self="showUploadModal=false">
       <div class="modal">
         <h4>上传图片贴纸</h4>
         <input type="file" ref="fileRef" accept="image/*" />
@@ -101,9 +109,9 @@ function getTodayStr(){
   const d = String(t.getDate()).padStart(2,"0");
   return `${y}-${m}-${d}`;
 }
-onMounted(()=>{
-  canvasStore.initIfEmpty();
-  // 页面打开自动激活画布
+
+onMounted(async ()=>{
+  await canvasStore.initIfEmpty();
   if(canvasStore.tmpCanvasList.length > 0){
     canvasStore.curTmpCanvasId = canvasStore.tmpCanvasList[0].id
   }else{
@@ -159,7 +167,6 @@ function resetAllStatus(){
   })
   canvasStore.persistSave();
 }
-// 添加月度统计画布元素
 function addMonthStat(){
   const uid = "item_"+Date.now()+"_"+Math.floor(Math.random()*9999);
   currentData.value.items.push({
@@ -281,4 +288,37 @@ async function confirmSave(){
 .modal input{width:100%;box-sizing:border-box;padding:7px;margin-bottom:10px;}
 .modal-row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;}
 .modal-row button{padding:6px 12px;border-radius:5px;border:1px solid #ccc;}
+
+/* 加载遮罩样式 */
+.loading-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  z-index: 999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.loading-box {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.spinner {
+  width:36px;
+  height:36px;
+  border:3px solid #e2e2e2;
+  border-top-color:#5577dd;
+  border-radius:50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading-text {
+  font-size:14px;
+  color:#444;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>

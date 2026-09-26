@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/db');
 const { authMid } = require('../middleware/auth');
-
 //保存/更新手账画布，新增 noteDate 读写
 router.post('/save',authMid,async (req,res)=>{
   const {title,canvasHeight,canvasItems,notebookId,noteDate}=req.body;
@@ -60,4 +59,44 @@ router.delete("/:id", authMid, async (req,res)=>{
     res.json({code:500,msg:"删除失败"})
   }
 })
+
+//====================新增接口：首页临时画布保存====================
+router.post("/save-home-canvas", authMid, async (req,res)=>{
+  try{
+    const userId = req.user.userId;
+    const {canvasList} = req.body;
+    const jsonStr = JSON.stringify(canvasList);
+    //存在就更新，不存在插入（mysql insert ... on duplicate key update）
+    await pool.execute(`
+      INSERT INTO home_user_canvas(user_id, canvas_list) VALUES (?,?)
+      ON DUPLICATE KEY UPDATE canvas_list=?, updated_at=NOW()
+    `,[userId, jsonStr, jsonStr])
+    res.json({code:200,msg:"首页画布保存成功"})
+  }catch(e){
+    console.error("save‑home‑canvas err",e);
+    res.json({code:500,msg:"保存首页画布失败"})
+  }
+})
+
+//新增接口：读取用户首页临时画布
+router.get("/get-home-canvas", authMid, async(req,res)=>{
+  try{
+    const userId = req.user.userId;
+    const [rows] = await pool.execute("SELECT canvas_list FROM home_user_canvas WHERE user_id=?",[userId]);
+    if(rows.length===0){
+      return res.json({code:200,data:null})
+    }
+    let list = [];
+    try{
+      list = JSON.parse(rows[0].canvas_list)
+    }catch(err){
+      list = []
+    }
+    res.json({code:200,data:list})
+  }catch(e){
+    console.error("get‑home‑canvas err",e);
+    res.json({code:500,msg:"读取首页画布失败"})
+  }
+})
+
 module.exports = router;

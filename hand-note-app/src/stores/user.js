@@ -1,5 +1,7 @@
 import {defineStore} from "pinia";
 import {reqGetMonthCheckin} from "@/api/checkinApi";
+import {useHomeTempCanvasStore} from "./homeTempCanvas";
+
 export const useUserStore = defineStore("user",{
   state:()=>({
     username:"",
@@ -27,6 +29,9 @@ export const useUserStore = defineStore("user",{
       this.monthCheckinCache = {};
       localStorage.removeItem("token");
       localStorage.removeItem("username");
+      //登出同时清空首页临时画布
+      const canvasStore = useHomeTempCanvasStore();
+      canvasStore.clearCanvasStore();
     },
     // 获取某月打卡，存入缓存
     async fetchMonthCheckin(year,month){
