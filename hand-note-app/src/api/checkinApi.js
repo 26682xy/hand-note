@@ -1,38 +1,23 @@
-import {useUserStore} from "@/stores/user";
-const base = import.meta.env.VITE_API_BASE || "http://127.0.0.1:3001/api";
+import axios from "axios";
+// 和其他api保持同样baseURL与拦截器
+const api = axios.create({baseURL:"/api"});
+api.interceptors.request.use(cfg=>{
+  const t = localStorage.getItem("token");
+  if(t) cfg.headers.token = t;
+  return cfg;
+})
 
 export async function reqDoCheckin(checkDate){
-  const userStore = useUserStore();
-  const res = await fetch(`${base}/checkin/do`,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization": `Bearer ${userStore.token}`
-    },
-    body:JSON.stringify({checkDate})
-  })
-  return await res.json();
+  const res = await api.post("/checkin/do", { checkDate });
+  return res.data;
 }
 
 export async function reqCancelCheckin(checkDate){
-  const userStore = useUserStore();
-  const res = await fetch(`${base}/checkin/cancel`,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization": `Bearer ${userStore.token}`
-    },
-    body:JSON.stringify({checkDate})
-  })
-  return await res.json();
+  const res = await api.post("/checkin/cancel", { checkDate });
+  return res.data;
 }
 
 export async function reqGetMonthCheckin(year,month){
-  const userStore = useUserStore();
-  const res = await fetch(`${base}/checkin/month?year=${year}&month=${month}`,{
-    headers:{
-      "Authorization": `Bearer ${userStore.token}`
-    }
-  })
-  return await res.json();
+  const res = await api.get("/checkin/month", { params:{ year, month } });
+  return res.data;
 }
